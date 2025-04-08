@@ -98,11 +98,24 @@ CREATE TABLE matches (
     team2_player1_id INTEGER REFERENCES players(id) ON DELETE SET NULL,
     team2_player2_id INTEGER REFERENCES players(id) ON DELETE SET NULL, -- Null if singles
     winner_code INTEGER, -- 0=In Progress, 1=Team1 Wins, 2=Team2 Wins, 3=Draw, 4=Team1 Forfeit, 5=Team2 Forfeit
-    score TEXT, -- e.g., '6-2, 6-4', '8-5'
     notes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (meet_id, line_number, line_type) -- Ensure unique line # within a meet for each type
+);
+
+-- Create sets table (detailed score breakdown within a match)
+CREATE TABLE sets (
+    id SERIAL PRIMARY KEY,
+    match_id INTEGER NOT NULL REFERENCES matches(id) ON DELETE CASCADE,
+    set_number INTEGER NOT NULL,
+    team1_games_won INTEGER NOT NULL CHECK (team1_games_won >= 0),
+    team2_games_won INTEGER NOT NULL CHECK (team2_games_won >= 0),
+    tiebreak_score_team1 INTEGER CHECK (tiebreak_score_team1 IS NULL OR tiebreak_score_team1 >= 0), -- Null if no tiebreak played or applicable
+    tiebreak_score_team2 INTEGER CHECK (tiebreak_score_team2 IS NULL OR tiebreak_score_team2 >= 0),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (match_id, set_number) -- Ensure unique set number within a match
 );
 
 -- Create stats table (detailed stats for a player within a match)
@@ -147,5 +160,6 @@ CREATE TRIGGER update_seasons_updated_at BEFORE UPDATE ON seasons FOR EACH ROW E
 CREATE TRIGGER update_meet_formats_updated_at BEFORE UPDATE ON meet_formats FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_meets_updated_at BEFORE UPDATE ON meets FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_matches_updated_at BEFORE UPDATE ON matches FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_sets_updated_at BEFORE UPDATE ON sets FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- End of schema script 
