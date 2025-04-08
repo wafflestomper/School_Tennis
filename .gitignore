@@ -1,2 +1,8 @@
 # Environment variables
-.env 
+.env
+
+# Node dependencies
+node_modules/
+
+# Optional: VSCode workspace settings
+.vscode/ 
