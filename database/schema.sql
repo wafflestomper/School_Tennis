@@ -2,15 +2,16 @@
 -- SQL script to create the database schema for the School Tennis application
 
 -- Drop tables in reverse order of creation to handle dependencies
-DROP TABLE IF EXISTS stats;
-DROP TABLE IF EXISTS matches;
-DROP TABLE IF EXISTS meets;
-DROP TABLE IF EXISTS meet_formats;
-DROP TABLE IF EXISTS players;
-DROP TABLE IF EXISTS teams;
-DROP TABLE IF EXISTS users;
-DROP TABLE IF EXISTS roles;
-DROP TABLE IF EXISTS seasons;
+DROP TABLE IF EXISTS stats CASCADE;
+DROP TABLE IF EXISTS sets CASCADE;
+DROP TABLE IF EXISTS matches CASCADE;
+DROP TABLE IF EXISTS meets CASCADE;
+DROP TABLE IF EXISTS meet_formats CASCADE;
+DROP TABLE IF EXISTS players CASCADE;
+DROP TABLE IF EXISTS teams CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS roles CASCADE;
+DROP TABLE IF EXISTS seasons CASCADE;
 
 -- Create roles table
 CREATE TABLE roles (
@@ -25,6 +26,7 @@ CREATE TABLE users (
     email TEXT UNIQUE NOT NULL,
     name TEXT NOT NULL,
     role_id INTEGER NOT NULL REFERENCES roles(id),
+    password TEXT, -- Nullable, for local authentication password hash
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

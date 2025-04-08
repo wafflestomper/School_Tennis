@@ -1,5 +1,6 @@
 const express = require('express');
 const userService = require('../services/userService');
+const { ensureAuthenticated } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
@@ -60,7 +61,7 @@ router.get('/:id', async (req, res, next) => {
 });
 
 // PUT /api/users/:id - Update a user
-router.put('/:id', async (req, res, next) => {
+router.put('/:id', ensureAuthenticated, async (req, res, next) => {
     try {
         const userId = parseInt(req.params.id, 10);
         if (isNaN(userId)) {
@@ -95,7 +96,7 @@ router.put('/:id', async (req, res, next) => {
 
 
 // DELETE /api/users/:id - Delete a user
-router.delete('/:id', async (req, res, next) => {
+router.delete('/:id', ensureAuthenticated, async (req, res, next) => {
     try {
         const userId = parseInt(req.params.id, 10);
         if (isNaN(userId)) {

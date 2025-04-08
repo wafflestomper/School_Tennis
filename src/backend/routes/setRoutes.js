@@ -7,6 +7,7 @@ const {
     deleteSet
 } = require('../services/setService');
 const matchService = require('../services/matchService'); // To verify match exists
+const { ensureAuthenticated } = require('../middleware/authMiddleware'); // Import
 
 // Create separate routers for top-level and nested routes
 const router = express.Router(); // For /api/sets/:id routes
@@ -41,7 +42,7 @@ nestedRouter.get('/', async (req, res, next) => {
 });
 
 // POST /api/matches/:matchId/sets - Create a new set for a specific match
-nestedRouter.post('/', async (req, res, next) => {
+nestedRouter.post('/', ensureAuthenticated, async (req, res, next) => {
     try {
         // Add validation for set data (e.g., scores)
         const setData = { ...req.body, match_id: req.matchId }; // Inject match_id from URL param
@@ -81,7 +82,7 @@ router.get('/:id', async (req, res, next) => {
 });
 
 // PUT /api/sets/:id - Update a set by its ID
-router.put('/:id', async (req, res, next) => {
+router.put('/:id', ensureAuthenticated, async (req, res, next) => {
     try {
         const setId = parseInt(req.params.id, 10);
         if (isNaN(setId)) {
@@ -112,7 +113,7 @@ router.put('/:id', async (req, res, next) => {
 });
 
 // DELETE /api/sets/:id - Delete a set by its ID
-router.delete('/:id', async (req, res, next) => {
+router.delete('/:id', ensureAuthenticated, async (req, res, next) => {
     try {
         const setId = parseInt(req.params.id, 10);
         if (isNaN(setId)) {

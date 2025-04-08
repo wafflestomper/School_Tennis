@@ -6,11 +6,12 @@ const {
     updateSeason,
     deleteSeason
 } = require('../services/seasonService');
+const { ensureAuthenticated } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-// POST /api/seasons - Create a new season
-router.post('/', async (req, res, next) => {
+// POST /api/seasons - Create a new season (Protected)
+router.post('/', ensureAuthenticated, async (req, res, next) => {
     try {
         // Add validation for required fields and data types (e.g., date format)
         const { name } = req.body;
@@ -43,7 +44,7 @@ router.post('/', async (req, res, next) => {
     }
 });
 
-// GET /api/seasons - Get all seasons
+// GET /api/seasons - Get all seasons (Public)
 router.get('/', async (req, res, next) => {
     try {
         const seasons = await getAllSeasons();
@@ -54,7 +55,7 @@ router.get('/', async (req, res, next) => {
     }
 });
 
-// GET /api/seasons/:id - Get a single season by ID
+// GET /api/seasons/:id - Get a single season by ID (Public)
 router.get('/:id', async (req, res, next) => {
     try {
         const seasonId = parseInt(req.params.id, 10);
@@ -72,8 +73,8 @@ router.get('/:id', async (req, res, next) => {
     }
 });
 
-// PUT /api/seasons/:id - Update a season
-router.put('/:id', async (req, res, next) => {
+// PUT /api/seasons/:id - Update a season (Protected)
+router.put('/:id', ensureAuthenticated, async (req, res, next) => {
     try {
         const seasonId = parseInt(req.params.id, 10);
         if (isNaN(seasonId)) {
@@ -103,8 +104,8 @@ router.put('/:id', async (req, res, next) => {
     }
 });
 
-// DELETE /api/seasons/:id - Delete a season
-router.delete('/:id', async (req, res, next) => {
+// DELETE /api/seasons/:id - Delete a season (Protected)
+router.delete('/:id', ensureAuthenticated, async (req, res, next) => {
     try {
         const seasonId = parseInt(req.params.id, 10);
         if (isNaN(seasonId)) {

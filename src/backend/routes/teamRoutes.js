@@ -1,5 +1,6 @@
 const express = require('express');
 const teamService = require('../services/teamService');
+const { ensureAuthenticated } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
@@ -38,7 +39,7 @@ router.get('/:id', async (req, res, next) => {
 });
 
 // PUT /api/teams/:id - Update a team
-router.put('/:id', async (req, res, next) => {
+router.put('/:id', ensureAuthenticated, async (req, res, next) => {
   try {
     const teamId = parseInt(req.params.id, 10);
     if (isNaN(teamId)) {
@@ -67,7 +68,7 @@ router.put('/:id', async (req, res, next) => {
 });
 
 // DELETE /api/teams/:id - Delete a team
-router.delete('/:id', async (req, res, next) => {
+router.delete('/:id', ensureAuthenticated, async (req, res, next) => {
   try {
     const teamId = parseInt(req.params.id, 10);
     if (isNaN(teamId)) {
@@ -97,7 +98,7 @@ router.delete('/:id', async (req, res, next) => {
 });
 
 // POST /api/teams - Create a new team
-router.post('/', async (req, res, next) => {
+router.post('/', ensureAuthenticated, async (req, res, next) => {
   try {
     // Updated validation: only 'name' is strictly required
     const { name } = req.body;

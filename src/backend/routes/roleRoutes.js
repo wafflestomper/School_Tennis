@@ -6,6 +6,7 @@ const {
     updateRole,
     deleteRole
 } = require('../services/roleService'); // Import all service functions
+const { ensureAuthenticated } = require('../middleware/authMiddleware'); // Import
 
 const router = express.Router();
 
@@ -42,7 +43,7 @@ router.get('/:id', async (req, res, next) => {
 });
 
 // POST /api/roles - Create a new role
-router.post('/', async (req, res, next) => {
+router.post('/', ensureAuthenticated, async (req, res, next) => {
     try {
         const { name } = req.body;
         if (!name) {
@@ -64,7 +65,7 @@ router.post('/', async (req, res, next) => {
 });
 
 // PUT /api/roles/:id - Update a role
-router.put('/:id', async (req, res, next) => {
+router.put('/:id', ensureAuthenticated, async (req, res, next) => {
     try {
         const roleId = parseInt(req.params.id, 10);
         if (isNaN(roleId)) {
@@ -91,7 +92,7 @@ router.put('/:id', async (req, res, next) => {
 });
 
 // DELETE /api/roles/:id - Delete a role
-router.delete('/:id', async (req, res, next) => {
+router.delete('/:id', ensureAuthenticated, async (req, res, next) => {
     try {
         const roleId = parseInt(req.params.id, 10);
         if (isNaN(roleId)) {

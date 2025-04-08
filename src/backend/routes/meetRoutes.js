@@ -1,10 +1,11 @@
 const express = require('express');
 const meetService = require('../services/meetService');
+const { ensureAuthenticated } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-// POST /api/meets - Create a new meet
-router.post('/', async (req, res, next) => {
+// POST /api/meets - Create a new meet (Protected)
+router.post('/', ensureAuthenticated, async (req, res, next) => {
     try {
          // Add more specific validation (e.g., date format, integer IDs)
          const { meet_date, team1_id, team2_id, meet_format_id } = req.body;
@@ -30,7 +31,7 @@ router.post('/', async (req, res, next) => {
     }
 });
 
-// GET /api/meets - Get all meets (optionally filter by season or team)
+// GET /api/meets - Get all meets (Public)
 router.get('/', async (req, res, next) => {
     try {
         const filters = {};
@@ -54,7 +55,7 @@ router.get('/', async (req, res, next) => {
 });
 
 
-// GET /api/meets/:id - Get a single meet by ID
+// GET /api/meets/:id - Get a single meet by ID (Public)
 router.get('/:id', async (req, res, next) => {
     try {
         const meetId = parseInt(req.params.id, 10);
@@ -72,8 +73,8 @@ router.get('/:id', async (req, res, next) => {
     }
 });
 
-// PUT /api/meets/:id - Update a meet
-router.put('/:id', async (req, res, next) => {
+// PUT /api/meets/:id - Update a meet (Protected)
+router.put('/:id', ensureAuthenticated, async (req, res, next) => {
     try {
         const meetId = parseInt(req.params.id, 10);
         if (isNaN(meetId)) {
@@ -106,8 +107,8 @@ router.put('/:id', async (req, res, next) => {
 });
 
 
-// DELETE /api/meets/:id - Delete a meet
-router.delete('/:id', async (req, res, next) => {
+// DELETE /api/meets/:id - Delete a meet (Protected)
+router.delete('/:id', ensureAuthenticated, async (req, res, next) => {
     try {
         const meetId = parseInt(req.params.id, 10);
         if (isNaN(meetId)) {

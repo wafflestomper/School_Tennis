@@ -7,11 +7,12 @@ const {
     deleteMatch
 } = require('../services/matchService');
 const setService = require('../services/setService'); // Needed for fetching sets when getting a match
+const { ensureAuthenticated } = require('../middleware/authMiddleware'); // Import
 
 const router = express.Router();
 
-// POST /api/matches - Create a new match
-router.post('/', async (req, res, next) => {
+// POST /api/matches - Create a new match (Protected)
+router.post('/', ensureAuthenticated, async (req, res, next) => {
     try {
         // Add more specific validation here based on line_type, player assignments, etc.
         const newMatch = await createMatch(req.body);
@@ -28,7 +29,7 @@ router.post('/', async (req, res, next) => {
     }
 });
 
-// GET /api/matches - Get all matches (optionally filter by meet_id)
+// GET /api/matches - Get all matches (Public)
 router.get('/', async (req, res, next) => {
     try {
         const filters = {};
@@ -48,7 +49,7 @@ router.get('/', async (req, res, next) => {
     }
 });
 
-// GET /api/matches/:id - Get a single match by ID (including its sets)
+// GET /api/matches/:id - Get a single match by ID (Public)
 router.get('/:id', async (req, res, next) => {
     try {
         const matchId = parseInt(req.params.id, 10);
@@ -70,8 +71,8 @@ router.get('/:id', async (req, res, next) => {
     }
 });
 
-// PUT /api/matches/:id - Update a match
-router.put('/:id', async (req, res, next) => {
+// PUT /api/matches/:id - Update a match (Protected)
+router.put('/:id', ensureAuthenticated, async (req, res, next) => {
     try {
         const matchId = parseInt(req.params.id, 10);
         if (isNaN(matchId)) {
@@ -97,8 +98,8 @@ router.put('/:id', async (req, res, next) => {
     }
 });
 
-// DELETE /api/matches/:id - Delete a match (and its sets)
-router.delete('/:id', async (req, res, next) => {
+// DELETE /api/matches/:id - Delete a match (and its sets) (Protected)
+router.delete('/:id', ensureAuthenticated, async (req, res, next) => {
     try {
         const matchId = parseInt(req.params.id, 10);
         if (isNaN(matchId)) {

@@ -1,10 +1,11 @@
 const express = require('express');
 const playerService = require('../services/playerService');
+const { ensureAuthenticated } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
 // POST /api/players - Create a new player record (link user to team)
-router.post('/', async (req, res, next) => {
+router.post('/', ensureAuthenticated, async (req, res, next) => {
     try {
         const { user_id, team_id, is_captain } = req.body;
         if (!user_id) {
@@ -70,7 +71,7 @@ router.get('/:id', async (req, res, next) => {
 });
 
 // PUT /api/players/:id - Update a player's team or captain status
-router.put('/:id', async (req, res, next) => {
+router.put('/:id', ensureAuthenticated, async (req, res, next) => {
     try {
         const playerId = parseInt(req.params.id, 10);
         if (isNaN(playerId)) {
@@ -105,8 +106,14 @@ router.put('/:id', async (req, res, next) => {
 
 
 // DELETE /api/players/:id - Delete a player record (unlinks user from team)
-router.delete('/:id', async (req, res, next) => {
+router.delete('/:id', ensureAuthenticated, async (req, res, next) => {
     try {
+        // Check user role - Only Admin or Coach can delete
+        if (!req.user || !['Admin', 'Coach'].includes(req.user.role_name)) {
+             console.log(`User ${req.user?.email} (Role: ${req.user?.role_name}) attempted to delete player ${req.params.id} without permission.`);
+             return res.status(403).json({ message: 'Forbidden: Only Admins or Coaches can delete players.' });
+        }
+
         const playerId = parseInt(req.params.id, 10);
         if (isNaN(playerId)) {
             return res.status(400).json({ message: 'Invalid player ID format' });
