@@ -57,9 +57,10 @@ app.use(express.static(clientPath));
 // Mount authentication routes
 app.use('/auth', require('./routes/auth'));
 
+// Mount API routes
+app.use('/api/teams', require('./routes/teams'));
 // TODO: Define other API routes (e.g., /api/matches, /api/players)
 // app.use('/api/users', require('./routes/users'));
-// app.use('/api/teams', require('./routes/teams'));
 
 // Basic root route (sends the main HTML file)
 app.get('/', (req, res) => {
