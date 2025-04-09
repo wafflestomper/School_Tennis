@@ -110,7 +110,6 @@ router.delete('/:id', ensureAuthenticated, async (req, res, next) => {
     try {
         // Check user role - Only Admin or Coach can delete
         if (!req.user || !['Admin', 'Coach'].includes(req.user.role_name)) {
-             console.log(`User ${req.user?.email} (Role: ${req.user?.role_name}) attempted to delete player ${req.params.id} without permission.`);
              return res.status(403).json({ message: 'Forbidden: Only Admins or Coaches can delete players.' });
         }
 
