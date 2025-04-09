@@ -40,7 +40,7 @@ passport.deserializeUser(async (id, done) => {
 });
 
 // --- Local Strategy (Email/Password) ---
-pasport.use(new LocalStrategy(
+passport.use(new LocalStrategy(
     { usernameField: 'email' }, // Tell LocalStrategy to use 'email' as the username field
     async (email, password, done) => {
         console.log(`LocalStrategy: Attempting login for email: ${email}`);
@@ -80,7 +80,7 @@ pasport.use(new LocalStrategy(
 ));
 
 // --- Google OAuth 2.0 Strategy ---
-pasport.use(new GoogleStrategy({
+passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     callbackURL: process.env.GOOGLE_CALLBACK_URL,
