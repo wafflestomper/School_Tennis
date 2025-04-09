@@ -27,12 +27,9 @@ router.post('/register', async (req, res, next) => {
                  console.error('Error logging in after registration:', err);
                  return next(err);
             }
-            console.log(`User ${newUser.email} registered and logged in.`);
-            // Send back user info (excluding password hash, which createUser already does)
             return res.status(201).json(newUser);
         });
     } catch (err) {
-        console.error('Error in /register route:', err);
         if (err.message.includes('already exists') || err.message.includes('Role with ID')) {
              return res.status(409).json({ message: err.message }); // Conflict or Bad Request
         }
@@ -58,8 +55,6 @@ router.post('/login', (req, res, next) => {
                 console.error('Error establishing session after login:', err);
                 return next(err);
             }
-             console.log(`User ${user.email} logged in successfully.`);
-             // Send back logged-in user info
              return res.json(user);
         });
     })(req, res, next); // Important: call the middleware function returned by passport.authenticate
@@ -95,7 +90,6 @@ router.post('/logout', (req, res, next) => {
          }
          // Optional: Clear session cookie explicitly if needed, though req.logout often handles this
          // req.session.destroy((err) => { ... });
-         console.log(`User ${userEmail} logged out.`);
          res.status(200).json({ message: 'Logged out successfully' });
      });
  });

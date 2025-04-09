@@ -4,21 +4,22 @@ const app = require('../../server'); // Adjust path if server.js is located else
 const db = require('../backend/db'); // Used for DB checks
 const { cleanTables } = require('./setup'); // Import cleanTables
 
+// Basic Authentication API Tests
 describe('Authentication API - /api/auth', () => {
   let server;
 
-  // Start server before tests
+  // Start server before all tests in this suite
   beforeAll((done) => {
-    server = app.listen(0, done); // Listen on a random port
+    server = app.listen(0, done); // Use port 0 for random available port
   });
 
-  // Close server after tests
+  // Close server after all tests in this suite
   afterAll((done) => {
-    server.close(done); // Only close the server
-    // db.pool.end(done); // Removed pool closure
+    server.close(done);
+    // db.pool.end(done); // Removed: Pool closed in setup.js afterAll
   });
 
-  // Clean tables before each test within this file
+  // Clean tables before each test in this suite
   beforeEach(cleanTables);
 
   // --- Registration Tests (/api/auth/register) ---

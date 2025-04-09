@@ -31,7 +31,6 @@ const createUser = async (userData) => {
         const result = await db.query(queryText, values);
         return result.rows[0];
     } catch (err) {
-        console.error('Error creating user:', err);
         if (err.code === '23505') { // Unique violation (email or google_id)
             if (err.constraint === 'users_email_key') {
                  throw new Error(`User with email '${email}' already exists.`);

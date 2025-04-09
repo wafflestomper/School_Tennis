@@ -3,19 +3,18 @@ const fs = require('fs');
 const path = require('path');
 const db = require('../backend/db'); // Import the configured db
 
-// List of tables to clean before each test
-// Only include tables holding transactional data, not static reference data like roles.
+// List of tables to clean before each test, in reverse dependency order
 const tablesToClean = [
-  'sets',
-  'matches',
-  'meets',
-  'players',
-  'teams',
-  // 'sessions', // Removed as it's not defined in schema.sql
-  'users',
-  // 'roles', // Removed - Roles should persist as seeded by schema.sql
-  'stats',
-  'meet_formats',
+  'stats',      // References matches, players
+  'sets',       // References matches
+  'matches',    // References meets, players
+  'players',    // References users, teams
+  'meets',      // References seasons, teams, meet_formats
+  'teams',      // References users
+  'users',      // References roles
+  'meet_formats',// References users
+  'seasons'     // No references (in this list)
+  // 'roles' table is intentionally omitted as it contains static seeded data
 ];
 
 // Function to execute the schema SQL file
@@ -36,15 +35,17 @@ const runSchema = async () => {
 
 // Function to clean tables
 const cleanTables = async () => {
-  console.log('Cleaning test database tables...');
+  // console.log('Cleaning test database tables...'); // Removed log
+  // Use TRUNCATE CASCADE with the correct table order
   try {
     for (const table of tablesToClean) {
-      // Use TRUNCATE ... RESTART IDENTITY CASCADE for efficiency and resetting sequences
+      // console.log(`  Truncating ${table}...`); // Removed log
       await db.pool.query(`TRUNCATE TABLE "${table}" RESTART IDENTITY CASCADE`);
     }
-    console.log('Tables cleaned.');
+    // console.log('Tables cleaned.'); // Removed log
   } catch (error) {
     console.error('Error cleaning tables:', error);
+    throw error; // Re-throw error to make sure test run knows cleaning failed
   }
 };
 

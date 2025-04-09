@@ -90,7 +90,7 @@ describe('Authorization Tests', () => {
   describe('Role-Based Permissions', () => {
 
     // Helper function to create user and player record for tests
-    // Returns an agent logged in as that user, and the player ID
+    // Returns an agent logged in as that user, the user ID, and the player ID
     const setupUserAndPlayer = async (roleId, emailSuffix) => {
         const agent = request.agent(app);
         const userCredentials = {
@@ -103,27 +103,38 @@ describe('Authorization Tests', () => {
         const regRes = await agent.post('/api/auth/register').send(userCredentials);
         expect(regRes.statusCode).toBe(201); // Ensure registration works
         const userId = regRes.body.id;
+        const sessionCookie = regRes.header['set-cookie']; // Capture the cookie
 
         // Create a dummy team (needed for player creation)
-        // Use stateless request as we only need the team ID
-        const teamRes = await request(app).post('/api/teams').set('Cookie', regRes.header['set-cookie']).send({ name: `Test Team for ${emailSuffix}`});
+        // Use stateless request with the captured cookie
+        const teamRes = await request(app).post('/api/teams')
+                                    .set('Cookie', sessionCookie)
+                                    .send({ name: `Test Team for ${emailSuffix}`});
+        if (teamRes.statusCode !== 201) {
+            console.error(`Failed to create team for ${emailSuffix}. Status: ${teamRes.statusCode}, Body:`, teamRes.body);
+        }
         expect(teamRes.statusCode).toBe(201);
         const teamId = teamRes.body.id;
 
         // Create a player record linking the user to the team
-        // Use stateless request as we only need the player ID
-        const playerRes = await request(app).post('/api/players').set('Cookie', regRes.header['set-cookie']).send({ user_id: userId, team_id: teamId });
+        // Use stateless request with the captured cookie
+        const playerRes = await request(app).post('/api/players')
+                                      .set('Cookie', sessionCookie)
+                                      .send({ user_id: userId, team_id: teamId });
+        if (playerRes.statusCode !== 201) {
+             console.error(`Failed to create player for ${emailSuffix} (User ID: ${userId}). Status: ${playerRes.statusCode}, Body:`, playerRes.body);
+        }
         expect(playerRes.statusCode).toBe(201);
         const playerId = playerRes.body.id;
 
-        return { agent, userId, playerId };
+        return { agent, userId, playerId }; // Return the original agent for subsequent actions in the test
     };
 
     it('should return 403 Forbidden when a Player tries to DELETE /api/players/:id', async () => {
         // Arrange: Create and log in as a Player (Role ID 3)
         const { agent: playerAgent, playerId } = await setupUserAndPlayer(3, 'player');
 
-        // Act: Attempt to delete the player record using the Player's agent
+        // Act: Attempt to delete their own player record using the Player's agent
         const response = await playerAgent.delete(`/api/players/${playerId}`);
 
         // Assert
@@ -136,38 +147,58 @@ describe('Authorization Tests', () => {
     });
 
     it('should return 200 OK when a Coach tries to DELETE /api/players/:id', async () => {
-        // Arrange: Create a player to delete, and log in as a Coach (Role ID 2)
-        // We need a separate player to delete, created perhaps by a setup step or another user
-        // Let's create a player first, then log in as a coach to delete them.
-        const playerToDelete = await setupUserAndPlayer(3, 'deletee'); // Create a player (role 3)
-        const { agent: coachAgent } = await setupUserAndPlayer(2, 'coach'); // Create/login coach (role 2)
+        // Arrange:
+        // 1. Create a player to be deleted
+        const { playerId: targetPlayerId, userId: targetUserId } = await setupUserAndPlayer(3, 'deletee');
 
-        // Act: Attempt to delete the player record using the Coach's agent
-        const response = await coachAgent.delete(`/api/players/${playerToDelete.playerId}`);
+        // 2. Register a Coach user and get an authenticated agent for them
+        const coachAgent = request.agent(app);
+        const coachCredentials = {
+            email: `role-test-coach@example.com`,
+            password: 'password123',
+            name: `Role Test coach`,
+            role_id: 2,
+        };
+        const coachRegRes = await coachAgent.post('/api/auth/register').send(coachCredentials);
+        expect(coachRegRes.statusCode).toBe(201); // Ensure coach registration worked
+
+        // Act: Attempt to delete the FIRST player record using the Coach's agent
+        const response = await coachAgent.delete(`/api/players/${targetPlayerId}`);
 
         // Assert
         expect(response.statusCode).toBe(200);
-        expect(response.body).toHaveProperty('id', playerToDelete.playerId);
+        expect(response.body).toHaveProperty('id', targetPlayerId);
 
         // Verify player no longer exists in DB
-        const dbRes = await db.query('SELECT COUNT(*) FROM players WHERE id = $1', [playerToDelete.playerId]);
+        const dbRes = await db.query('SELECT COUNT(*) FROM players WHERE id = $1', [targetPlayerId]);
         expect(parseInt(dbRes.rows[0].count, 10)).toBe(0);
     });
 
     it('should return 200 OK when an Admin tries to DELETE /api/players/:id', async () => {
-        // Arrange: Create a player to delete, and log in as an Admin (Role ID 1)
-        const playerToDelete = await setupUserAndPlayer(3, 'deletee-admin'); // Create a player (role 3)
-        const { agent: adminAgent } = await setupUserAndPlayer(1, 'admin'); // Create/login admin (role 1)
+        // Arrange:
+        // 1. Create a player to be deleted
+        const { playerId: targetPlayerId, userId: targetUserId } = await setupUserAndPlayer(3, 'deletee-admin');
 
-        // Act: Attempt to delete the player record using the Admin's agent
-        const response = await adminAgent.delete(`/api/players/${playerToDelete.playerId}`);
+        // 2. Register an Admin user and get an authenticated agent for them
+        const adminAgent = request.agent(app);
+        const adminCredentials = {
+            email: `role-test-admin@example.com`,
+            password: 'password123',
+            name: `Role Test admin`,
+            role_id: 1,
+        };
+        const adminRegRes = await adminAgent.post('/api/auth/register').send(adminCredentials);
+        expect(adminRegRes.statusCode).toBe(201); // Ensure admin registration worked
+
+        // Act: Attempt to delete the FIRST player record using the Admin's agent
+        const response = await adminAgent.delete(`/api/players/${targetPlayerId}`);
 
         // Assert
         expect(response.statusCode).toBe(200);
-        expect(response.body).toHaveProperty('id', playerToDelete.playerId);
+        expect(response.body).toHaveProperty('id', targetPlayerId);
 
         // Verify player no longer exists in DB
-        const dbRes = await db.query('SELECT COUNT(*) FROM players WHERE id = $1', [playerToDelete.playerId]);
+        const dbRes = await db.query('SELECT COUNT(*) FROM players WHERE id = $1', [targetPlayerId]);
         expect(parseInt(dbRes.rows[0].count, 10)).toBe(0);
     });
 
